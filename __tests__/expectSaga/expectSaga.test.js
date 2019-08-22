@@ -304,3 +304,25 @@ test('terminates and does not wait for Call effect Promises', async () => {
 
   expect(warn).not.toHaveBeenCalled();
 });
+
+test('can time out when saga dispatches many actions quickly', async () => {
+  const mock = jest.fn();
+  const LARGE_OR_INFINITE = 100000;
+  function* saga() {
+    for (let i = 0; i < LARGE_OR_INFINITE; i++) yield put({ type: 'FOO' });
+    mock();
+  }
+  await expectSaga(saga).run(1);
+  expect(mock).not.toHaveBeenCalled();
+});
+
+test.skip('can time out when saga dispatches infinitely many actions quickly', async () => {
+  function* saga() {
+    while (true) {
+      yield put({ type: 'FOO' });
+    }
+  }
+
+  await expectSaga(saga).run(10);
+  expect(warn).toHaveBeenCalled();
+}); // runs forever
